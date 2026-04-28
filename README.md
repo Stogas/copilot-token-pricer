@@ -5,28 +5,28 @@ A small Go CLI for reading local VS Code Copilot chat session JSONL files and ag
 ## Commands
 
 ```bash
-# From this directory
-go run . list
+# If running from source, replace `copilot-token-pricer` with `go run .`
+copilot-token-pricer list
 
 # Aggregate one workspace by model
-go run . report --workspace <workspace-id-or-path>
+copilot-token-pricer report --workspace <workspace-id-or-path>
 
 # Aggregate one workspace by model and week/month
-go run . report --workspace <workspace-id-or-path> --period week
-go run . report --workspace <workspace-id-or-path> --period month
+copilot-token-pricer report --workspace <workspace-id-or-path> --period week
+copilot-token-pricer report --workspace <workspace-id-or-path> --period month
 
 # Only include the current month, or the current and previous month
-go run . report --workspace <workspace-id-or-path> --period month --last-periods 1
-go run . report --workspace <workspace-id-or-path> --period month --last-periods 2
+copilot-token-pricer report --workspace <workspace-id-or-path> --period month --last-periods 1
+copilot-token-pricer report --workspace <workspace-id-or-path> --period month --last-periods 2
 
 # Include estimated Anthropic API token costs
-go run . report --workspace <workspace-id-or-path> --period month --cost anthropic
+copilot-token-pricer report --workspace <workspace-id-or-path> --period month --cost anthropic
 
 # Include estimated token costs for every known Anthropic, OpenAI, and Gemini model
-go run . report --workspace <workspace-id-or-path> --period month --cost all
+copilot-token-pricer report --workspace <workspace-id-or-path> --period month --cost all
 
 # Aggregate every discovered workspace
-go run . report --all --period month
+copilot-token-pricer report --all --period month
 ```
 
 ## Release builds
@@ -46,7 +46,7 @@ Options:
 The numbers below are sanitized sample data and are not intended to represent real usage.
 
 ```text
-$ go run . report --all --period month --cost all --last-periods 1
+$ copilot-token-pricer report --all --period month --cost all --last-periods 1
 Pricing model: all
 Pricing basis: standard API token prices per 1M tokens; excludes cache discounts, batch/flex/priority modes, data residency uplifts, tool/search charges, media-specific charges, and Copilot subscription effects.
 Pricing sources: Anthropic configured public API rates; OpenAI API pricing https://developers.openai.com/api/docs/pricing and https://openai.com/api/pricing/; Gemini Developer API pricing https://ai.google.dev/gemini-api/docs/pricing (last updated 2026-04-22 UTC).
@@ -73,7 +73,7 @@ PERIOD   MODEL                              REQUESTS  INPUT     OUTPUT  TOTAL   
 2026-04  copilot/gemini-3-flash-preview     11        806720    9855    816575    $0.50     $3.00      $0.43
 2026-04  copilot/gpt-5.3-codex              6         0         0       0         $1.75     $14.00     $0.00
 2026-04  copilot/gpt-5.5                    2         0         0       0         $5.00     $30.00     $0.00
-		 PRICED TOTAL                                 12874620  177835  13052455                       $42.87
+         PRICED TOTAL                                 12874620  177835  13052455                       $42.87
 ```
 
 ## Misc

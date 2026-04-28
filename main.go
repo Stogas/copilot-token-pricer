@@ -14,7 +14,7 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		printUsage(os.Stderr)
+		printUsage(os.Stderr, commandName())
 		os.Exit(2)
 	}
 
@@ -25,7 +25,7 @@ func main() {
 	case "report":
 		err = runReport(os.Args[2:])
 	case "help", "-h", "--help":
-		printUsage(os.Stdout)
+		printUsage(os.Stdout, commandName())
 		return
 	default:
 		err = fmt.Errorf("unknown command %q", os.Args[1])
@@ -157,7 +157,7 @@ func selectWorkspaces(workspaces []Workspace, query string, all bool) ([]Workspa
 		matches = partial
 	}
 	if len(matches) == 0 {
-		return nil, fmt.Errorf("workspace %q not found; run `go run . list` to see choices", query)
+		return nil, fmt.Errorf("workspace %q not found; run the list command to see choices", query)
 	}
 	if len(matches) > 1 {
 		var labels []string
@@ -260,11 +260,19 @@ func displayWorkspacePath(workspace Workspace) string {
 	return "(unknown)"
 }
 
-func printUsage(w io.Writer) {
-	fmt.Fprintln(w, "Copilot Usage Go CLI")
+func commandName() string {
+	name := filepath.Base(os.Args[0])
+	if name == "" || name == "." {
+		return "copilot-token-pricer"
+	}
+	return name
+}
+
+func printUsage(w io.Writer, command string) {
+	fmt.Fprintln(w, "Copilot Token Pricer")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Usage:")
-	fmt.Fprintln(w, "  go run . list [--storage-root <path>]")
-	fmt.Fprintln(w, "  go run . report --workspace <id-or-path> [--period none|week|month] [--last-periods <n>] [--cost none|anthropic|openai|gemini|all] [--storage-root <path>]")
-	fmt.Fprintln(w, "  go run . report --all [--period none|week|month] [--last-periods <n>] [--cost none|anthropic|openai|gemini|all] [--storage-root <path>]")
+	fmt.Fprintf(w, "  %s list [--storage-root <path>]\n", command)
+	fmt.Fprintf(w, "  %s report --workspace <id-or-path> [--period none|week|month] [--last-periods <n>] [--cost none|anthropic|openai|gemini|all] [--storage-root <path>]\n", command)
+	fmt.Fprintf(w, "  %s report --all [--period none|week|month] [--last-periods <n>] [--cost none|anthropic|openai|gemini|all] [--storage-root <path>]\n", command)
 }
