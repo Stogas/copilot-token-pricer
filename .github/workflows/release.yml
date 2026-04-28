@@ -1,9 +1,6 @@
 name: Release builds
 
 on:
-  push:
-    tags:
-      - 'v*'
   release:
     types: [published]
 
@@ -91,6 +88,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
@@ -100,10 +100,8 @@ jobs:
       - name: Publish assets
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG_NAME: ${{ github.event.release.tag_name || github.ref_name }}
+          GH_REPO: ${{ github.repository }}
+          TAG_NAME: ${{ github.event.release.tag_name }}
         run: |
           set -euo pipefail
-          if ! gh release view "${TAG_NAME}" >/dev/null 2>&1; then
-            gh release create "${TAG_NAME}" --title "${TAG_NAME}" --notes "Release ${TAG_NAME}"
-          fi
           gh release upload "${TAG_NAME}" dist/* --clobber
