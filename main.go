@@ -68,6 +68,7 @@ func runReport(args []string) error {
 	storageRoot := flags.String("storage-root", "", "VS Code workspaceStorage directory")
 	workspaceQuery := flags.String("workspace", "", "workspace ID, exact path, or path substring")
 	period := flags.String("period", "none", "time grouping: none, week, month")
+	lastPeriods := flags.Int("last-periods", 0, "only include the current and previous N-1 periods for --period week or month")
 	cost := flags.String("cost", "none", "cost model: none, anthropic, openai, gemini, all")
 	all := flags.Bool("all", false, "aggregate all discovered workspaces")
 	if err := flags.Parse(args); err != nil {
@@ -76,6 +77,12 @@ func runReport(args []string) error {
 
 	if *period != "none" && *period != "week" && *period != "month" {
 		return errors.New("--period must be one of: none, week, month")
+	}
+	if *lastPeriods < 0 {
+		return errors.New("--last-periods must be zero or greater")
+	}
+	if *lastPeriods > 0 && *period == "none" {
+		return errors.New("--last-periods requires --period week or --period month")
 	}
 	if !validCostMode(*cost) {
 		return errors.New("--cost must be one of: none, anthropic, openai, gemini, all")
@@ -98,6 +105,7 @@ func runReport(args []string) error {
 	if err != nil {
 		return err
 	}
+	events = filterEventsByRecentPeriods(events, *period, *lastPeriods)
 	rows := aggregateEvents(events, *period)
 
 	if *cost != "none" {
@@ -257,6 +265,6 @@ func printUsage(w io.Writer) {
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Usage:")
 	fmt.Fprintln(w, "  go run . list [--storage-root <path>]")
-	fmt.Fprintln(w, "  go run . report --workspace <id-or-path> [--period none|week|month] [--cost none|anthropic|openai|gemini|all] [--storage-root <path>]")
-	fmt.Fprintln(w, "  go run . report --all [--period none|week|month] [--cost none|anthropic|openai|gemini|all] [--storage-root <path>]")
+	fmt.Fprintln(w, "  go run . report --workspace <id-or-path> [--period none|week|month] [--last-periods <n>] [--cost none|anthropic|openai|gemini|all] [--storage-root <path>]")
+	fmt.Fprintln(w, "  go run . report --all [--period none|week|month] [--last-periods <n>] [--cost none|anthropic|openai|gemini|all] [--storage-root <path>]")
 }

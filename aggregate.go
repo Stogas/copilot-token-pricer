@@ -60,6 +60,58 @@ func aggregateEvents(events []RequestEvent, period string) []AggregateRow {
 	return rows
 }
 
+func filterEventsByRecentPeriods(events []RequestEvent, period string, periods int) []RequestEvent {
+	return filterEventsByRecentPeriodsAt(events, period, periods, time.Now())
+}
+
+func filterEventsByRecentPeriodsAt(events []RequestEvent, period string, periods int, now time.Time) []RequestEvent {
+	if periods == 0 || period == "none" {
+		return events
+	}
+
+	start, end := recentPeriodWindow(now, period, periods)
+	filtered := make([]RequestEvent, 0, len(events))
+	for _, event := range events {
+		if event.TimestampMs == 0 {
+			continue
+		}
+
+		t := time.UnixMilli(event.TimestampMs).Local()
+		if !t.Before(start) && t.Before(end) {
+			filtered = append(filtered, event)
+		}
+	}
+	return filtered
+}
+
+func recentPeriodWindow(now time.Time, period string, periods int) (time.Time, time.Time) {
+	if periods < 1 {
+		periods = 1
+	}
+
+	now = now.Local()
+	switch period {
+	case "week":
+		currentStart := startOfISOWeek(now)
+		return currentStart.AddDate(0, 0, -7*(periods-1)), currentStart.AddDate(0, 0, 7)
+	case "month":
+		currentStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+		return currentStart.AddDate(0, -(periods - 1), 0), currentStart.AddDate(0, 1, 0)
+	default:
+		return time.Time{}, time.Time{}
+	}
+}
+
+func startOfISOWeek(t time.Time) time.Time {
+	t = t.Local()
+	start := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+	weekday := int(start.Weekday())
+	if weekday == 0 {
+		weekday = 7
+	}
+	return start.AddDate(0, 0, -(weekday - 1))
+}
+
 func periodLabel(timestampMs int64, period string) string {
 	if period == "none" {
 		return "all"
